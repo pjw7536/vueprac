@@ -1,5 +1,5 @@
 <template>
-  <div class="login-container">
+  <div class="login-container" :class="{ 'fade-out': loginSuccess }">
     <div :class="['login-box', { 'fade-in': !loginFailed, 'shake': shakeEffect }]">
       <h1 class="login-title">Login</h1>
       <form @submit.prevent="handleLogin">
@@ -43,6 +43,7 @@ const username = ref('')
 const password = ref('')
 const loginFailed = ref(false) // loginFailed 변수를 정의합니다.
 const shakeEffect = ref(false) // 흔들림 효과를 위한 변수
+const loginSuccess = ref(false) // 로그인 성공 여부를 위한 변수
 const authStore = useAuthStore()
 const router = useRouter()
 
@@ -51,8 +52,11 @@ const handleLogin = async () => {
   if (username.value === 'admin' && password.value === 'admin') {
     const token = 'dummy-token' // 예시용 토큰
     authStore.login(token)
-    router.push('/')
     loginFailed.value = false // 로그인 성공 시 loginFailed를 false로 설정합니다.
+    loginSuccess.value = true // 로그인 성공 시 loginSuccess를 true로 설정합니다.
+    setTimeout(() => {
+      router.push('/')
+    }, 800) // 1초 후에 라우트 이동
   } else {
     loginFailed.value = true
     triggerShakeEffect() // 로그인 실패 시 흔들림 효과를 트리거합니다.
@@ -90,11 +94,17 @@ watch(loginFailed, (newVal) => {
   bottom: 0;
   overflow: hidden; /* 스크롤 제거 */
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  transition: opacity 1s ease; /* 서서히 사라지는 효과를 위한 트랜지션 */
 }
 
 .fade-in {
   opacity: 0;
-  animation: fadeIn 3s forwards;
+  animation: fadeIn 2.5s forwards;
+}
+
+.fade-out {
+  opacity: 0; /* 서서히 사라지는 효과 */
+  transition: opacity 0.5s ease; /* 서서히 사라지는 효과를 위한 트랜지션 */
 }
 
 @keyframes fadeIn {
