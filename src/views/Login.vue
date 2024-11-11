@@ -1,6 +1,6 @@
 <template>
   <div class="login-container">
-    <div class="login-box fade-in">
+    <div :class="['login-box', { 'fade-in': !loginFailed, 'shake': shakeEffect }]">
       <h1 class="login-title">Login</h1>
       <form @submit.prevent="handleLogin">
         <div class="form-group">
@@ -24,19 +24,25 @@
             class="input-field"
           />
         </div>
+        <div class="form-group" style="height: 2px;">
+          <p v-if="loginFailed" class="error-message">로그인 실패</p>
+        </div>
         <button type="submit" class="login-button">로그인</button>
       </form>
+      
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import { useRouter } from 'vue-router'
 
 const username = ref('')
 const password = ref('')
+const loginFailed = ref(false) // loginFailed 변수를 정의합니다.
+const shakeEffect = ref(false) // 흔들림 효과를 위한 변수
 const authStore = useAuthStore()
 const router = useRouter()
 
@@ -46,10 +52,30 @@ const handleLogin = async () => {
     const token = 'dummy-token' // 예시용 토큰
     authStore.login(token)
     router.push('/')
+    loginFailed.value = false // 로그인 성공 시 loginFailed를 false로 설정합니다.
   } else {
-    alert('아이디 또는 비밀번호가 잘못되었습니다.')
+    loginFailed.value = true
+    triggerShakeEffect() // 로그인 실패 시 흔들림 효과를 트리거합니다.
   }
 }
+
+// 흔들림 효과를 트리거하는 함수
+const triggerShakeEffect = () => {
+  shakeEffect.value = false // 기존의 흔들림 효과를 초기화
+  setTimeout(() => {
+    shakeEffect.value = true
+    setTimeout(() => {
+      shakeEffect.value = false
+    }, 300) // 0.3초 후에 shakeEffect를 false로 설정
+  }, 0) // 즉시 흔들림 효과를 다시 시작
+}
+
+// loginFailed가 true로 변경될 때마다 shakeEffect를 true로 설정
+watch(loginFailed, (newVal) => {
+  if (newVal) {
+    triggerShakeEffect()
+  }
+})
 </script>
 
 <style scoped>
@@ -68,7 +94,7 @@ const handleLogin = async () => {
 
 .fade-in {
   opacity: 0;
-  animation: fadeIn 2s forwards;
+  animation: fadeIn 3s forwards;
 }
 
 @keyframes fadeIn {
@@ -79,30 +105,41 @@ const handleLogin = async () => {
 
 .login-box {
   width: 100%;
-  max-width: 380px;
+  max-width: 280px;
   padding: 3rem;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 20px;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(10px);
+  transition: transform 0.3s ease;
+}
+
+.shake {
+  animation: shake 0.3s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-10px); }
+  40%, 80% { transform: translateX(10px); }
 }
 
 .login-title {
   text-align: center;
   color: #1a365d;
   font-size: 2.2rem;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;
   font-weight: 700;
   letter-spacing: -0.5px;
 }
 
 .form-group {
-  margin-bottom: 1.8rem;
+  margin-bottom: 1.3rem;
 }
 
 label {
   display: block;
-  margin-bottom: 0.7rem;
+  margin-bottom: 0.3rem;
   color: #2d3748;
   font-weight: 600;
   font-size: 0.95rem;
@@ -116,6 +153,7 @@ label {
   font-size: 1rem;
   transition: all 0.25s ease;
   background-color: #ffffff;
+  color: #1a365d;
 }
 
 .input-field:focus {
@@ -139,7 +177,7 @@ label {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 1rem;
+  margin-top: 0.3rem;
 }
 
 .login-button:hover {
@@ -150,5 +188,11 @@ label {
 
 .login-button:active {
   transform: translateY(0);
+}
+
+.error-message{
+    color: red;
+    font-size: 0.8rem;
+    
 }
 </style> 
